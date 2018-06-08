@@ -295,7 +295,7 @@ public:
 		return at(x, root);
 	}
 
-	U find(const T &x) {
+	U* find(const T &x) {
 		fidx.open(idxname, fstream::in | fstream::binary);
 		int root;
 		fidx.seekg(sizeof(int), ios::beg);
@@ -1119,7 +1119,7 @@ private:
 		return at(x, ha);//若不是数据结点，递归调用私有find函数
 	}
 
-	U find(const T &x, const int root) {
+	U* find(const T &x, const int root) {
 		fidx.open(idxname, fstream::in | fstream::binary);
 		//idxNode t;
 		idxNode *t1 = new idxNode;
@@ -1142,7 +1142,7 @@ private:
 				if (!(d.record[j] < x) && !(x < d.record[j])) {
 					fidx.close();
 					fdata.close();
-					U ans=d.value[j];
+					U *ans=new U(d.value[j]);
 					delete d1;
 					delete t1;
 					return ans;

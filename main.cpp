@@ -287,12 +287,13 @@ int main() {
         }
         else if (strcmp(a, "sale_train") == 0) {
             train_id_key K;
-            TRAIN now;
+            //TRAIN now;
             cin >> K.train_id;
             if (!train.check(K))
                 cout << 0 << '\n';
             else {
-                now = train.find(K);
+                TRAIN *_now = train.find(K);
+				TRAIN &now=(*_now);
                 if (now.isSale == 1)
                     cout << 0 << '\n';
                 else {
@@ -324,16 +325,18 @@ int main() {
 //                cout << "ticket中的票数:" << ticket.size() << '\n';
                     cout << 1 << '\n';
                 }
+				delete _now;
             }
         }
         else if (strcmp(a, "query_train") == 0) {
             train_id_key K;
-            TRAIN now;
+            //TRAIN now;
             cin >> K.train_id;
             if (train.check(K) == 0)
                 cout << 0 << '\n';
             else {
-                now = train.find(K);
+                TRAIN *_now = train.find(K);
+				TRAIN &now=(*_now);
                 if(now.isSale == 0)
                     cout << 0 << '\n';
                 else{
@@ -354,32 +357,36 @@ int main() {
                         cout << '\n';
                     }
                 }
+				delete _now;
             }
         }
         else if (strcmp(a, "delete_train") == 0) {
             train_id_key K;
-            TRAIN now;
+            //TRAIN now;
             cin >> K.train_id;
             if (train.check(K) == 0)
                 cout << 0 << '\n';
             else {
-                now = train.find(K);
+                TRAIN *_now = train.find(K);
+				TRAIN &now = (*_now);
                 if (now.isSale == 1)
                     cout << 0 << '\n';
                 else {
                     train.erase(K);
                     cout << 1 << '\n';
                 }
+				delete (_now);
             }
         }
         else if (strcmp(a, "modify_train") == 0) {
             train_id_key K;
-            TRAIN now;
+            //TRAIN now;
             cin >> K.train_id;
             if (train.check(K) == 0)
                 cout << 0 << '\n';
             else {
-                now = train.find(K);
+				TRAIN *_now = train.find(K);
+                TRAIN &now = (*_now);
                 if (now.isSale == 1)
                     cout << 0 << '\n';
                 else {
@@ -409,6 +416,7 @@ int main() {
                     train.modify(K, now);
                     cout << 1 << '\n';
                 }
+				delete (_now);
             }
         }
         else if (strcmp(a, "query_ticket") == 0) {
@@ -447,7 +455,8 @@ int main() {
                             T[cnt_train].ky = KK;
                             T[cnt_train].dt1 = dt;
                             T[cnt_train].dt2 = dt;
-                            TRAIN now = train.find(train_K);
+                            TRAIN *_now = train.find(train_K);
+							TRAIN &now = (*_now);
                             int i = 0, min_ticket_remain[5];
                             for (int p = 0; p < now.num_ticket_kind; ++p)
                                 min_ticket_remain[p] = 2010;
@@ -475,6 +484,7 @@ int main() {
                             }
                             T[cnt_train].tk_kind_num = now.num_ticket_kind;
                             cnt_train++;
+							delete (_now);
                         }
                         it++;
                     }
@@ -617,7 +627,8 @@ int main() {
                 strcpy(TK1.tm_arrive, T_1[I].tm_arrive);
                 train_id_key train_K1, train_K2;
                 strcpy(train_K1.train_id, TK1.ky.train_id);
-                TRAIN now = train.find(train_K1);
+                TRAIN *_now = train.find(train_K1);
+				TRAIN &now =(*_now);
                 int i = 0, min_ticket_remain[5];
                 for (int p = 0; p < now.num_ticket_kind; ++p)
                     min_ticket_remain[p] = 2010;
@@ -642,7 +653,8 @@ int main() {
                 strcpy(TK2.tm_st, T_2[I].tm_arrive);
                 strcpy(TK2.tm_arrive, T_2[I].tm_st);
                 int min_ticket_remain1[5];
-                TRAIN now1 = train.find(train_K2);
+                TRAIN *_now1 = train.find(train_K2);
+				TRAIN &now1 = (*_now1);
                 for (int p = 0; p < now1.num_ticket_kind; ++p)
                     min_ticket_remain1[p] = 2010;
                 for (i = 0; strcmp(now1.station[i].loc, TK2.ky.loc1) != 0; ++i);
@@ -666,6 +678,8 @@ int main() {
                 for (int p = 0; p < TK2.tk_kind_num; ++p)
                     cout << ' ' << TK2.tk_name[p] << ' ' << TK2.tk_remain[p] << ' ' << fixed << setprecision(6) << TK2.price[p];//要记得用printf
                 cout << '\n';
+				delete (_now);
+				delete (_now1);
             }
 
         }
@@ -684,7 +698,8 @@ int main() {
                 if(!train.check(K))
                     cout << 0 << '\n';
                 else{
-                    TRAIN now = train.find(K);
+                    TRAIN *_now = train.find(K);
+					TRAIN &now = (*_now);
                     int p;
                     for (p = 0; p < now.num_ticket_kind; ++p)
                         if (strcmp(tk_kind, now.ticket_kind[p]) == 0)
@@ -729,6 +744,7 @@ int main() {
                         }
                         else cout << 0 << '\n';
                     }
+					delete (_now);
                 }
             }
         }
@@ -784,12 +800,14 @@ int main() {
             if (train.check(train_K) == 0)
                 cout << 0 << '\n';
             else {
-                TRAIN now = train.find(train_K);
+                TRAIN *_now = train.find(train_K);
+				TRAIN &now = (*_now);
                 K.train_kind = now.train_kind;
                 if (!User.check(K))
                     cout << 0 << '\n';
                 else {
-                    tk_order Tk = User.find(K);
+                    tk_order *_Tk = User.find(K);
+					tk_order &Tk = (*_Tk);
                     int p;
                     for (p = 0; p < Tk.num_tk_kind; ++p)
                         if (strcmp(tk_kind, Tk.tk_name[p]) == 0)
@@ -807,7 +825,9 @@ int main() {
                         train.modify(train_K, now);
                         cout << 1 << '\n';
                     }
+					delete (_Tk);
                 }
+				delete (_now);
             }
         }
         else if (strcmp(a, "exit") == 0) {
