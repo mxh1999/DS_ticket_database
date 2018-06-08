@@ -4,12 +4,13 @@
 #include <fstream>
 using namespace std;
 
-const int idxSize = 5, dataBlkSize = 5;
-template<class T, class U>
+//const int idxSize = 5, dataBlkSize = 5;
+template<class T, class U,int idxSize,int dataBlkSize>
 //template <class T, class U, int idxSize, int dataBlkSize>
 class BplusTree {
 private:
-	
+	//static const int idxSize=4096,dataBlkSize;
+	friend class iterator;
 	struct idxNode {//索引结点
 		int type;//type = 0  下一层为索引结点   type = 1  下一层为数据结点
 		T key[idxSize - 1];//存储关键字

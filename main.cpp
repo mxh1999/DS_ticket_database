@@ -194,9 +194,9 @@ struct tk_query {
 };
 
 Userlist user("test1.txt");
-BplusTree<train_id_key, TRAIN> train;
-BplusTree<tk_key, tk> ticket;
-BplusTree<user_order_key, tk_order> User;
+BplusTree<train_id_key, TRAIN,160,1> train;
+BplusTree<tk_key, tk,30,10> ticket;
+BplusTree<user_order_key, tk_order,35,30> User;
 
 int main() {
 //    ios::sync_with_stdio(0);
@@ -431,7 +431,7 @@ int main() {
 //            }
             tk_key K;
             tk_query T[8000];
-            BplusTree<tk_key, tk>::iterator it;
+            BplusTree<tk_key, tk,30,10>::iterator it;
             char date[12];
             char catalog[11];
             int dt;
@@ -505,8 +505,8 @@ int main() {
             }
         }
         else if (strcmp(a, "query_transfer") == 0) {//查找A到C地，中转B站的车票;
-            BplusTree<tk_key, tk>::iterator it1; //A到B；
-            BplusTree<tk_key, tk>::iterator it2; //C到B；
+            BplusTree<tk_key, tk,30,10>::iterator it1; //A到B；
+            BplusTree<tk_key, tk,30,10>::iterator it2; //C到B；
             tk_key K1;
             tk_key K2;
             char date[12];
@@ -759,7 +759,7 @@ int main() {
             if(!user.isvalid(K.user_id))
                 cout << -1 << '\n';
             else{
-                BplusTree<user_order_key, tk_order>::iterator it;
+                BplusTree<user_order_key, tk_order,35,30>::iterator it;
                 for (int b = 0; catalog[b] != '\0'; ++b) {
                     K.train_kind = catalog[b];
                     it = User.lowerbound(K);
