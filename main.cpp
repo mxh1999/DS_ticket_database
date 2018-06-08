@@ -1,8 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include "userlist.hpp"
-#include "BplusTree2.hpp"
-#include <map>
+#include "BplusTree.hpp"
 #include <cstring>
 #include <iomanip>
 using namespace std;
@@ -437,7 +436,7 @@ int main() {
                 while (true) {
                     tk_key KK = it.Record();
                     if (KK.train_kind == K.train_kind && strcmp(KK.loc1, K.loc1) == 0 &&
-                        strcmp(KK.loc2, K.loc2) == 0) {
+                        strcmp(KK.loc2, K.loc2) == 0 && ticket.isValid(it)) {
 //                        train_id_key train_K;
 //                        strcpy(train_K.train_id, KK.train_id);
 //                        tk TT = it.Value();//或者改成it.Value();
@@ -509,6 +508,12 @@ int main() {
             int cnt = 0;
             tk T_1[5000], T_2[5000];//用来记录每个确定中转站的最短时间的tk的信息
             tk_query TK1, TK2;
+//            BplusTree<tk_key, tk>::iterator lyt;
+//            int cc = 0;
+//            for(lyt = ticket.begin();ticket.isValid(lyt); cc++){
+//                cout << lyt.Record().loc1 << lyt.Record().loc2 << ' ';
+//                lyt++;
+//            }
             for (int b = 0; catalog[b] != '\0'; ++b) {
                 train_kind = catalog[b];
                 K1.train_kind = train_kind;
@@ -542,7 +547,7 @@ int main() {
                     tk T1[2000], T2[2000];//用来记录某个特定中转站中的tk信息
                     int cnt_t1 = 0, cnt_t2 = 0;
                     if((strcmp(KK1.loc1, K1.loc1) == 0) && (strcmp(KK2.loc1, K2.loc1) == 0) &&
-                           (KK1.train_kind == KK2.train_kind)){
+                       (KK1.train_kind == KK2.train_kind)){
                         while((strcmp(ky1.loc1, KK1.loc1) == 0)  && ky1.train_kind == KK1.train_kind && strcmp(ky1.loc2, KK1.loc2) == 0 &&
                               ticket.isValid(it1)) {
                             tk TT1 = it1.Value();
@@ -745,7 +750,7 @@ int main() {
                     while (true) {
                         user_order_key k = it.Record();
                         tk_order tmp = it.Value();
-                        if (k.train_kind == K.train_kind) {
+                        if (k.train_kind == K.train_kind && User.isValid(it)) {
                             t[cnt] = tmp;
                             cnt++;
                             it++;
@@ -807,9 +812,9 @@ int main() {
         }
         else if (strcmp(a, "exit") == 0) {
             cout << "BYE" << '\n';
-			train.exit();
-			ticket.exit();
-			User.exit();
+//            train.exit();
+//            ticket.exit();
+//            User.exit();
             return 0;
         }
         else if (strcmp(a, "clean") == 0) {
