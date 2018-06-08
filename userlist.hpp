@@ -23,7 +23,50 @@ private:
 	const static int size_man=size_name+size_password+size_email+size_phone+size_privilege;
 	std::fstream iofile;
 	int usernum;
+	int blocknum;
 	char *filename;
+	char buffer[4096];
+	int nowuser;
+	int nowblock;
+	struct Block
+	{
+		char name[40];
+		char password[20];
+		char email[20];
+		char phone[20];
+		char privilege;
+	}	bl[40];
+	int change_block(int idb)
+	{
+		if (idb==nowblock)	return 0;
+		if (nowblock==1)
+		{
+			memcpy(buffer,reinterpret_cast<char *> (&usernum),4);
+			memcpy(buffer+4,bl,size_man*40);
+			iofile.seekp(0);
+			iofile.write(buffer,4096);
+		}	else
+		{
+			memcpy(buffer,bl,size_man*40);
+			iofile.seekp(nowblock*4096-4096);
+			iofile.write(buffer,4096);
+		}
+		if (idb>blocknum)
+		{
+			iofile.seekp(4096*(idb-1));
+			iofile.write(buffer,4096);
+			if (iofile.rdstate()!=0)	return -1;
+			blocknum++;
+		}	else
+		{
+			iofile.seekp(4096*(idb-1));
+			iofile.read(buffer,4096);
+			if (idb==1)	memcpy(bl,buffer+4,size_man*40);
+			else memcpy(bl,buffer,size_man*40);
+		}
+		nowblock=idb;
+		return 0; 
+	}
 public:
 	Userlist() = default;
 	Userlist(const char *_filename){
@@ -35,74 +78,78 @@ public:
 		if(!iofile)
 		{
 			iofile.open(filename,std::fstream::out|std::fstream::binary);
-			iofile.write(reinterpret_cast<const char *> (&usernum),sizeof(usernum));
+			memcpy(buffer,&usernum,4);
+			nowuser=1;
+			iofile.write(buffer,4096);
 		}
 		iofile.close();
 		iofile.open(filename,std::fstream::in|std::fstream::out|std::fstream::binary);
-		iofile.read(reinterpret_cast<char *> (&usernum),sizeof(usernum));
-		iofile.close();
+		iofile.read(buffer,4096);
+		memcpy(reinterpret_cast<char *> (&usernum),buffer,4);
+		memcpy(reinterpret_cast<char *> (bl),buffer+4,size_man*40);
+		nowuser=1;
+		nowblock=1;
+		blocknum=(usernum-1)/40+1;
 	}
 	~Userlist()
 	{
-		delete [] filename;
+		change_block(1);
+		memcpy(buffer,reinterpret_cast<char *> (&usernum),4);
+		memcpy(buffer+4,bl,size_man*40);
+		iofile.seekp(0);
+		iofile.write(buffer,4096);
+		iofile.close();
+		if (filename!=NULL)	delete [] filename;
 	}
 	int Register(char *name,char *password,char *email,char *phone)
 	{
-		iofile.open(filename,std::fstream::in|std::fstream::out|std::fstream::binary);
 		++usernum;
-		iofile.write(reinterpret_cast<const char *> (&usernum),sizeof(usernum));
-		iofile.seekp(sizeof(int)+size_man*(usernum-1));
-		iofile.write(reinterpret_cast<const char *> (name),size_name);
-		iofile.write(reinterpret_cast<const char *> (password),size_password);
-		iofile.write(reinterpret_cast<const char *> (email),size_email);
-		iofile.write(reinterpret_cast<const char *> (phone),size_phone);
-		char privilege=0;
-		if (usernum==1)	privilege=2;else privilege=1;
-		iofile.write(reinterpret_cast<const char *> (&privilege),sizeof(char));
-		iofile.close();
-		if (iofile.rdstate()!=0)	return -1;
+		if (change_block((usernum-1)/40+1)==-1)	return -1;
+		int pos=usernum-nowblock*40+39;
+		memcpy(bl[pos].name,name,size_name);
+		memcpy(bl[pos].password,password,size_password);
+		memcpy(bl[pos].email,email,size_email);
+		memcpy(bl[pos].phone,phone,size_phone);
+		if (usernum==1)	bl[pos].privilege=2;else bl[pos].privilege=1;
+		//if (iofile.rdstate()!=0)	return -1;
 		return usernum+2017;
 	}
 	int Login(const int id,const char *password)
 	{
 		if (id<2018 || id>2017+usernum)	return 0;
-		iofile.open(filename,std::fstream::in|std::fstream::out|std::fstream::binary);
-		iofile.seekg(sizeof(int)+size_man*(id-2018)+size_name);
+		change_block((id-2018)/40+1);
+		int pos=id-2017-nowblock*40+39;
 		char *s=new char [size_password+1];
-		iofile.read(reinterpret_cast<char *> (s),size_password);
+		memcpy(s,bl[pos].password,size_password);
 		s[size_password]=0;
 		int ans=0;
 		if (strcmp(password,s)==0)	ans=1;
-		iofile.close();
 		delete [] s;
 		return ans;
 	}	
 	int Query_profile(const int id,char *name ,char *email,char *phone,char &privilege)
 	{
 		if (id<2018 || id>2017+usernum)	return 0;
-		iofile.open(filename,std::fstream::in|std::fstream::out|std::fstream::binary);
-		iofile.seekg(sizeof(int)+size_man*(id-2018));
-		iofile.read(reinterpret_cast<char *> (name),size_name);
+		change_block((id-2018)/40+1);
+		int pos=id-2017-nowblock*40+39;
+		memcpy(name,bl[pos].name,size_name);
 		name[size_name]=0;
-		iofile.seekg(size_password,iofile.cur);
-		iofile.read(reinterpret_cast<char *> (email),size_email);
+		memcpy(email,bl[pos].email,size_email);
 		email[size_email]=0;
-		iofile.read(reinterpret_cast<char *> (phone),size_phone);
+		memcpy(phone,bl[pos].phone,size_phone);
 		phone[size_phone]=0;
-		iofile.read(reinterpret_cast<char *> (&privilege),sizeof(char));
-		iofile.close();
+		privilege=bl[pos].privilege;
 		return 1;
 	}
     int Modify_profile(const int id,const char *name ,const char *password,const char *email,const char *phone)
     {
         if (id<2018 || id>2017+usernum)	return 0;
-        iofile.open(filename,std::fstream::in|std::fstream::out|std::fstream::binary);
-        iofile.seekg(sizeof(int)+size_man*(id-2018));
-        iofile.write(reinterpret_cast<const char *> (name),size_name);
-        iofile.write(reinterpret_cast<const char *> (password),size_password);
-        iofile.write(reinterpret_cast<const char *> (email),size_email);
-        iofile.write(reinterpret_cast<const char *> (phone),size_phone);
-        iofile.close();
+		change_block((id-2018)/40+1);
+		int pos=id-2017-nowblock*40+39;
+		memcpy(bl[pos].name,name,size_name);
+		memcpy(bl[pos].password,password,size_password);
+		memcpy(bl[pos].email,email,size_email);
+		memcpy(bl[pos].phone,phone,size_phone);
         return 1;
     }
     int Modify_privilege(const int id1,const int id2,const char privilege)
@@ -111,21 +158,14 @@ public:
         if (id2<2018 || id2>2017+usernum)	return 0;
         if (id1==id2)	return 0;
         //if (privilege!= 2)	return 0;
-        iofile.open(filename,std::fstream::in|std::fstream::out|std::fstream::binary);
-        char privilege1;
-        iofile.seekg(sizeof(int)+size_man*(id1-2018)+size_name+size_password+size_email+size_phone);
-        iofile.read(reinterpret_cast<char *> (&privilege1),sizeof(char));
-        char privilege2;
-        iofile.seekg(sizeof(int)+size_man*(id2-2018)+size_name+size_password+size_email+size_phone);
-        iofile.read(reinterpret_cast<char *> (&privilege2),sizeof(char));
-        if (privilege1!=2 || privilege<privilege2)
-        {
-            iofile.close();
-            return 0;
-        }
-        iofile.seekp(sizeof(int)+size_man*(id2-2018)+size_name+size_password+size_email+size_phone);
-        iofile.write(reinterpret_cast<const char *> (&privilege),sizeof(char));
-        iofile.close();
+		change_block((id1-2018)/40+1);
+		int pos=id1-2017-nowblock*40+39;
+        char privilege1=bl[pos].privilege;
+		change_block((id2-2018)/40+1);
+		pos=id2-2017-nowblock*40+39;
+        char privilege2=bl[pos].privilege;
+        if (privilege1!=2 || privilege<privilege2)	return 0;
+		bl[pos].privilege=privilege;
         return 1;
     }
 	int size()
@@ -136,7 +176,8 @@ public:
     {
         iofile.open(filename,std::fstream::out|std::fstream::binary);
         usernum=0;
-        iofile.write(reinterpret_cast<const char *> (&usernum),sizeof(usernum));
+		memcpy(buffer,reinterpret_cast<char *> (&usernum),4);
+        iofile.write(buffer,4096);
         iofile.close();
     }
 	bool isvalid(int id)
