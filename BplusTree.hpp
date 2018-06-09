@@ -5,7 +5,7 @@
 using namespace std;
 
 //const int idxSize = 5, dataBlkSize = 5;
-template<class T, class U,int idxSize,int dataBlkSize,int buffer_size>
+template<class T, class U,int idxSize,int dataBlkSize>
 //template <class T, class U, int idxSize, int dataBlkSize>
 class BplusTree {
 private:
@@ -79,7 +79,7 @@ public:
 			dataNode *d1 = new dataNode;
 			dataNode &d = *d1;
 			ifdata.open(data, fstream::in | fstream::binary);
-			ifdata.seekg(4096 + buffer_size * (dcur - 1), ios::beg);
+			ifdata.seekg(sizeof(int) + sizeof(dataNode) * (dcur - 1), ios::beg);
 			ifdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 			ifdata.close();
 			if (dpos == d.len - 1) {
@@ -96,7 +96,7 @@ public:
 			dataNode *d1 = new dataNode;
 			dataNode &d = *d1;
 			ifdata.open(data, fstream::in | fstream::binary);
-			ifdata.seekg(4096 + buffer_size * (dcur - 1), ios::beg);
+			ifdata.seekg(sizeof(int) + sizeof(dataNode) * (dcur - 1), ios::beg);
 			ifdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 			ifdata.close();
 			if (dpos == d.len - 1) {
@@ -114,7 +114,7 @@ public:
 			dataNode *d1 = new dataNode;
 			dataNode &d = *d1;
 			ifdata.open(data, fstream::in | fstream::binary);
-			ifdata.seekg(4096 + buffer_size * (dcur - 1), ios::beg);
+			ifdata.seekg(sizeof(int) + sizeof(dataNode) * (dcur - 1), ios::beg);
 			ifdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 			ifdata.close();
 			U ans=d.value[dpos];
@@ -127,7 +127,7 @@ public:
 			dataNode *d1 = new dataNode;
 			dataNode &d = *d1;
 			ifdata.open(data, fstream::in | fstream::binary);
-			ifdata.seekg(4096 + buffer_size * (dcur - 1), ios::beg);
+			ifdata.seekg(sizeof(int) + sizeof(dataNode) * (dcur - 1), ios::beg);
 			ifdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 			ifdata.close();
 			T ans=d.record[dpos];
@@ -210,13 +210,8 @@ public:
 			//fidx.write(reinterpret_cast<char*>(&root), sizeof(int));
 			//fidx.write(reinterpret_cast<char*>(&t), sizeof(idxNode));
 			fdata.seekp(0);
-			char buffer2[buffer_size];
-			memcpy(buffer,reinterpret_cast<char*>(&num), sizeof(int));//写入记录数量
-			fdata.write(buffer,4096);
-			//fdata.write(reinterpret_cast<char*>(&num), sizeof(int));
-			memcpy(buffer2,reinterpret_cast<char*>(&d), sizeof(dataNode));//写入dataNode内容
-			fdata.write(buffer2,buffer_size);
-			//fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
+			fdata.write(reinterpret_cast<char*>(&num), sizeof(int));
+			fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));//写入dataNode内容
 			delete d1;
 			delete t1;
 			fidx.close();
@@ -245,7 +240,7 @@ public:
 			//dataNode d;
 			dataNode *d1 = new dataNode;
 			dataNode &d = *d1;
-			fdata.seekg(4096 + buffer_size * (tmp.idx[0] - 1), ios::beg);
+			fdata.seekg(sizeof(int) + sizeof(dataNode) * (tmp.idx[0] - 1), ios::beg);
 			fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 			t.key[0] = d.record[0];//修改关键字值
 			fidx.seekg(0);
@@ -296,7 +291,7 @@ public:
 					//dataNode d;
 					dataNode *d1 = new dataNode;
 					dataNode &d = *d1;
-					fdata.seekg(4096 + buffer_size * (tmp.idx[0] - 1), ios::beg);
+					fdata.seekg(sizeof(int) + sizeof(dataNode) * (tmp.idx[0] - 1), ios::beg);
 					fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 					if (d.len == 0) {
 						root = 0;
@@ -358,7 +353,7 @@ public:
 		dataNode *d1 = new dataNode;
 		dataNode &d = *d1;
 		fdata.open(dataname, fstream::in | fstream::binary);
-		fdata.seekg(4096 + buffer_size * (t.idx[0] - 1), ios::beg);
+		fdata.seekg(sizeof(int) + sizeof(dataNode) * (t.idx[0] - 1), ios::beg);
 		fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 		fidx.close();
 		fdata.close();
@@ -451,7 +446,7 @@ private:
 		//dataNode d;
 		dataNode *d1 = new dataNode;
 		dataNode &d = *d1;
-		fdata.seekg(4096 + buffer_size * (pos - 1), ios::beg);
+		fdata.seekg(sizeof(int) + sizeof(dataNode) * (pos - 1), ios::beg);
 		fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 		if (d.len < dataBlkSize) {//x可以插入到当前块中,此时没有新建数据结点，不用更新nex值
 			int i;
@@ -462,11 +457,8 @@ private:
 			d.record[i] = x;
 			d.value[i] = v;
 			d.len++;
-			char buffer[buffer_size];
-			fdata.seekp(4096 + buffer_size * (pos - 1), ios::beg);
-			memcpy(buffer,reinterpret_cast<char*>(&d), sizeof(dataNode));
-			fdata.write(buffer,buffer_size);
-			//fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
+			fdata.seekp(sizeof(int) + sizeof(dataNode) * (pos - 1), ios::beg);
+			fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
 			delete d1;
 			return 0;
 		}
@@ -506,15 +498,10 @@ private:
 		}
 		fdata.seekp(0, ios::beg);
 		fdata.write(reinterpret_cast<char*>(&num), sizeof(int));//修改结点数
-		fdata.seekp(4096 + buffer_size * (num - 1), ios::beg);
-		char buffer[buffer_size];
-		memcpy(buffer,reinterpret_cast<char*>(&newNode), sizeof(dataNode));
-		fdata.write(buffer,buffer_size);
-		//fdata.write(reinterpret_cast<char*>(&newNode), sizeof(dataNode));
-		fdata.seekp(4096 + buffer_size * (pos - 1), ios::beg);
-		memcpy(buffer,reinterpret_cast<char*>(&d), sizeof(dataNode));
-		fdata.write(buffer,buffer_size);
-		//fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
+		fdata.seekp(sizeof(int) + sizeof(dataNode) * (num - 1), ios::beg);
+		fdata.write(reinterpret_cast<char*>(&newNode), sizeof(dataNode));
+		fdata.seekp(sizeof(int) + sizeof(dataNode) * (pos - 1), ios::beg);
+		fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
 		delete d1;
 		delete newNode1;
 		return num;
@@ -537,7 +524,7 @@ private:
 		//dataNode d;
 		dataNode *d1 = new dataNode;
 		dataNode &d = *d1;
-		fdata.seekg(4096 + buffer_size * (p.idx[0] - 1), ios::beg);
+		fdata.seekg(sizeof(int) + sizeof(dataNode) * (p.idx[0] - 1), ios::beg);
 		fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 		T min = d.record[0];
 		if (t.len < idxSize) {//索引块里没满，直接加入
@@ -615,7 +602,7 @@ private:
 		//dataNode newNode;
 		dataNode *newNode1 = new dataNode;
 		dataNode &newNode = *newNode1;
-		fdata.seekg(4096 + buffer_size * (newnode - 1), ios::beg);
+		fdata.seekg(sizeof(int) + sizeof(dataNode) * (newnode - 1), ios::beg);
 		fdata.read(reinterpret_cast<char*>(&newNode), sizeof(dataNode));
 		//idxNode t;
 		idxNode *t1 = new idxNode;
@@ -634,20 +621,15 @@ private:
 			//dataNode d;
 			dataNode *d1 = new dataNode;
 			dataNode &d = *d1;
-			fdata.seekg(4096 + buffer_size * (t.idx[i] - 1), ios::beg);
+			fdata.seekg(sizeof(int) + sizeof(dataNode) * (t.idx[i] - 1), ios::beg);
 			fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 			newNode.nex = d.nex;
 			d.nex = newnode;
 			char buffer[4096];
-			char buffer2[buffer_size];
-			fdata.seekp(4096 + buffer_size * (t.idx[i] - 1), ios::beg);
-			memcpy(buffer2,reinterpret_cast<char*>(&d), sizeof(dataNode));
-			fdata.write(buffer2,buffer_size);
-			//fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
-			fdata.seekp(4096 + buffer_size * (newnode - 1), ios::beg);
-			memcpy(buffer2,reinterpret_cast<char*>(&newNode), sizeof(dataNode));
-			fdata.write(buffer2,buffer_size);
-			//fdata.write(reinterpret_cast<char*>(&newNode), sizeof(dataNode));
+			fdata.seekp(sizeof(int) + sizeof(dataNode) * (t.idx[i] - 1), ios::beg);
+			fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
+			fdata.seekp(sizeof(int) + sizeof(dataNode) * (newnode - 1), ios::beg);
+			fdata.write(reinterpret_cast<char*>(&newNode), sizeof(dataNode));
 			fidx.seekg(4096 + 4096 * (tmp - 1), ios::beg);
 			memcpy(buffer,reinterpret_cast<char*>(&t), sizeof(idxNode));
 			fidx.write(buffer,4096);
@@ -671,19 +653,14 @@ private:
 			//dataNode d;
 			dataNode *d1 = new dataNode;
 			dataNode &d = *d1;
-			fdata.seekg(4096 + buffer_size * (t.idx[t.len - 1] - 1), ios::beg);
+			fdata.seekg(sizeof(int) + sizeof(dataNode) * (t.idx[t.len - 1] - 1), ios::beg);
 			fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 			newNode.nex = d.nex;
 			d.nex = newnode;
-			char buffer2[buffer_size];
-			fdata.seekp(4096 + buffer_size * (t.idx[t.len - 1] - 1), ios::beg);
-			memcpy(buffer2,reinterpret_cast<char*>(&d), sizeof(dataNode));
-			fdata.write(buffer2,buffer_size);
-			//fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
-			fdata.seekp(4096 + buffer_size * (newnode - 1), ios::beg);
-			memcpy(buffer2,reinterpret_cast<char*>(&newNode), sizeof(dataNode));
-			fdata.write(buffer2,buffer_size);
-			//fdata.write(reinterpret_cast<char*>(&newNode), sizeof(dataNode));
+			fdata.seekp(sizeof(int) + sizeof(dataNode) * (t.idx[t.len - 1] - 1), ios::beg);
+			fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
+			fdata.seekp(sizeof(int) + sizeof(dataNode) * (newnode - 1), ios::beg);
+			fdata.write(reinterpret_cast<char*>(&newNode), sizeof(dataNode));
 			delete d1;
 		}
 		else {//将原索引块的最大项移到新索引块，新增加的数据插入原索引块
@@ -699,19 +676,14 @@ private:
 			//dataNode d;
 			dataNode *d1 = new dataNode;
 			dataNode &d = *d1;
-			fdata.seekg(4096 + buffer_size * (t.idx[i] - 1), ios::beg);
+			fdata.seekg(sizeof(int) + sizeof(dataNode) * (t.idx[i] - 1), ios::beg);
 			fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 			newNode.nex = d.nex;
 			d.nex = newnode;
-			char buffer2[buffer_size];
-			fdata.seekp(4096 + buffer_size * (t.idx[i] - 1), ios::beg);
-			memcpy(buffer2,reinterpret_cast<char*>(&d), sizeof(dataNode));
-			fdata.write(buffer2,buffer_size);
-			//fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
-			fdata.seekg(4096 + buffer_size * (newnode - 1), ios::beg);
-			memcpy(buffer2,reinterpret_cast<char*>(&newNode), sizeof(dataNode));
-			fdata.write(buffer2,buffer_size);
-			//fdata.write(reinterpret_cast<char*>(&newNode), sizeof(dataNode));
+			fdata.seekp(sizeof(int) + sizeof(dataNode) * (t.idx[i] - 1), ios::beg);
+			fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
+			fdata.seekg(sizeof(int) + sizeof(dataNode) * (newnode - 1), ios::beg);
+			fdata.write(reinterpret_cast<char*>(&newNode), sizeof(dataNode));
 			delete d1;
 		}
 		//将一半索引项移到新索引块
@@ -773,7 +745,7 @@ private:
 		//dataNode d;
 		dataNode *d1 = new dataNode;
 		dataNode &d = *d1;
-		fdata.seekg(4096 + buffer_size * (t.idx[i] - 1), ios::beg);
+		fdata.seekg(sizeof(int) + sizeof(dataNode) * (t.idx[i] - 1), ios::beg);
 		fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 		int min = (dataBlkSize + 1) / 2;
 		int j;
@@ -785,11 +757,8 @@ private:
 			d.value[j] = d.value[j + 1];
 		}
 		d.len--;
-		char buffer2[buffer_size];
-		fdata.seekp(4096 + buffer_size * (t.idx[i] - 1), ios::beg);
-		memcpy(buffer2,reinterpret_cast<char*>(&d), sizeof(dataNode));
-		fdata.write(buffer2,buffer_size);
-		//fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
+		fdata.seekp(sizeof(int) + sizeof(dataNode) * (t.idx[i] - 1), ios::beg);
+		fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
 		delete d1;
 		return mergeDataBlk(t, i, pos);
 	}
@@ -799,14 +768,14 @@ private:
 		dataNode *d1 = new dataNode;
 		dataNode &d = *d1;
 		int min = (dataBlkSize + 1) / 2;
-		fdata.seekg(4096 + buffer_size * (t.idx[i] - 1), ios::beg);
+		fdata.seekg(sizeof(int) + sizeof(dataNode) * (t.idx[i] - 1), ios::beg);
 		fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 		if (d.len < min) {//不到半满
 			if (i > 0) {//有前邻居
 				//dataNode pre;
 				dataNode *pre1 = new dataNode;
 				dataNode &pre = *pre1;
-				fdata.seekg(4096 + buffer_size * (t.idx[i - 1] - 1), ios::beg);
+				fdata.seekg(sizeof(int) + sizeof(dataNode) * (t.idx[i - 1] - 1), ios::beg);
 				fdata.read(reinterpret_cast<char*>(&pre), sizeof(dataNode));
 				if (pre.len > min) {//前邻居超过半满，借一个结点
 					int j;
@@ -820,19 +789,14 @@ private:
 					d.len++;
 					t.key[i - 1] = d.record[0];
 					char buffer[4096];
-					char buffer2[buffer_size];
 					fidx.seekp(4096 + 4096 * (pos - 1), ios::beg);
 					memcpy(buffer,reinterpret_cast<char*>(&t), sizeof(idxNode));
 					fidx.write(buffer,4096);
 					//fidx.write(reinterpret_cast<char*>(&t), sizeof(idxNode));
-					fdata.seekp(4096 + buffer_size * (t.idx[i] - 1), ios::beg);
-					memcpy(buffer2,reinterpret_cast<char*>(&d), sizeof(dataNode));
-					fdata.write(buffer2,buffer_size);
-					//fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
-					fdata.seekp(4096 + buffer_size * (t.idx[i - 1] - 1), ios::beg);
-					memcpy(buffer2,reinterpret_cast<char*>(&pre), sizeof(dataNode));
-					fdata.write(buffer2,buffer_size);
-					//fdata.write(reinterpret_cast<char*>(&pre), sizeof(dataNode));
+					fdata.seekp(sizeof(int) + sizeof(dataNode) * (t.idx[i] - 1), ios::beg);
+					fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
+					fdata.seekp(sizeof(int) + sizeof(dataNode) * (t.idx[i - 1] - 1), ios::beg);
+					fdata.write(reinterpret_cast<char*>(&pre), sizeof(dataNode));
 					delete pre1;
 					delete d1;
 					return 0;
@@ -850,15 +814,13 @@ private:
 					pre.len += d.len;
 					t.len--;
 					pre.nex = d.nex;
-					char buffer[4096],buffer2[buffer_size];
+					char buffer[4096];
 					fidx.seekp(4096 + 4096 * (pos - 1), ios::beg);
 					memcpy(buffer,reinterpret_cast<char*>(&t), sizeof(idxNode));
 					fidx.write(buffer,4096);
 					//fidx.write(reinterpret_cast<char*>(&t), sizeof(idxNode));
-					fdata.seekp(4096 + buffer_size * (t.idx[i - 1] - 1), ios::beg);
-					memcpy(buffer2,reinterpret_cast<char*>(&pre), sizeof(dataNode));
-					fdata.write(buffer2,buffer_size);
-					//fdata.write(reinterpret_cast<char*>(&pre), sizeof(dataNode));
+					fdata.seekp(sizeof(int) + sizeof(dataNode) * (t.idx[i - 1] - 1), ios::beg);
+					fdata.write(reinterpret_cast<char*>(&pre), sizeof(dataNode));
 					delete d1;
 					delete pre1;
 					return 1;
@@ -869,7 +831,7 @@ private:
 				//dataNode next;
 				dataNode *next1 = new dataNode;
 				dataNode &next = *next1;
-				fdata.seekg(4096 + buffer_size * (t.idx[i + 1] - 1), ios::beg);
+				fdata.seekg(sizeof(int) + sizeof(dataNode) * (t.idx[i + 1] - 1), ios::beg);
 				fdata.read(reinterpret_cast<char*>(&next), sizeof(dataNode));
 				if (next.len > min) {
 					t.key[i] = d.record[0];
@@ -882,19 +844,15 @@ private:
 					}
 					next.len--;
 					d.len++;
-					char buffer[4096],buffer2[buffer_size];
+					char buffer[4096];
 					fidx.seekp(4096 + 4096 * (pos - 1), ios::beg);
 					memcpy(buffer,reinterpret_cast<char*>(&t), sizeof(idxNode));
 					fidx.write(buffer,4096);
 					//fidx.write(reinterpret_cast<char*>(&t), sizeof(idxNode));
-					fdata.seekp(4096 + buffer_size * (t.idx[i] - 1), ios::beg);
-					memcpy(buffer2,reinterpret_cast<char*>(&d), sizeof(dataNode));
-					fdata.write(buffer2,buffer_size);
-					//fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
-					fdata.seekp(4096 + buffer_size * (t.idx[i + 1] - 1), ios::beg);
-					memcpy(buffer2,reinterpret_cast<char*>(&next), sizeof(dataNode));
-					fdata.write(buffer2,buffer_size);
-					//fdata.write(reinterpret_cast<char*>(&next), sizeof(dataNode));
+					fdata.seekp(sizeof(int) + sizeof(dataNode) * (t.idx[i] - 1), ios::beg);
+					fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
+					fdata.seekp(sizeof(int) + sizeof(dataNode) * (t.idx[i + 1] - 1), ios::beg);
+					fdata.write(reinterpret_cast<char*>(&next), sizeof(dataNode));
 					delete next1;
 					delete d1;
 					return 0;
@@ -912,15 +870,13 @@ private:
 					d.len += next.len;
 					t.len--;
 					d.nex = next.nex;
-					char buffer[4096],buffer2[buffer_size];
+					char buffer[4096];
 					fidx.seekp(4096 + 4096 * (pos - 1), ios::beg);
 					memcpy(buffer,reinterpret_cast<char*>(&t), sizeof(idxNode));
 					fidx.write(buffer,4096);
 					//fidx.write(reinterpret_cast<char*>(&t), sizeof(idxNode));
-					fdata.seekp(4096 + buffer_size * (t.idx[i] - 1), ios::beg);
-					memcpy(buffer2,reinterpret_cast<char*>(&d), sizeof(dataNode));
-					fdata.write(buffer2,buffer_size);
-					//fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
+					fdata.seekp(sizeof(int) + sizeof(dataNode) * (t.idx[i] - 1), ios::beg);
+					fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
 					delete d1;
 					delete next1;
 					return 1;
@@ -969,12 +925,12 @@ private:
 							fidx.seekg(4096 + 4096 * (tmp.idx[0] - 1), ios::beg);
 							fidx.read(reinterpret_cast<char*>(&tmp), sizeof(idxNode));
 						}
-						fdata.seekg(4096 + buffer_size * (tmp.idx[0] - 1), ios::beg);
+						fdata.seekg(sizeof(int) + sizeof(dataNode) * (tmp.idx[0] - 1), ios::beg);
 						fdata.read(reinterpret_cast<char*>(&d1), sizeof(dataNode));
 						delete tmp1;
 					}
 					else {
-						fdata.seekg(4096 + buffer_size * (t2.idx[1] - 1), ios::beg);
+						fdata.seekg(sizeof(int) + sizeof(dataNode) * (t2.idx[1] - 1), ios::beg);
 						fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 					}
 					t2.key[0] = d.record[0];
@@ -1026,12 +982,12 @@ private:
 							fidx.seekg(4096 + 4096 * (tmp.idx[0] - 1), ios::beg);
 							fidx.read(reinterpret_cast<char*>(&tmp), sizeof(idxNode));
 						}
-						fdata.seekg(4096 + buffer_size * (tmp.idx[0] - 1), ios::beg);
+						fdata.seekg(sizeof(int) + sizeof(dataNode) * (tmp.idx[0] - 1), ios::beg);
 						fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 						delete tmp1;
 					}
 					else {
-						fdata.seekg(4096 + buffer_size * (t2.idx[t2.len - 1] - 1), ios::beg);
+						fdata.seekg(sizeof(int) + sizeof(dataNode) * (t2.idx[t2.len - 1] - 1), ios::beg);
 						fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 					}
 					t2.key[t2.len - 2] = d.record[0];
@@ -1075,12 +1031,12 @@ private:
 							fidx.seekg(4096 + 4096 * (tmp.idx[0] - 1), ios::beg);
 							fidx.read(reinterpret_cast<char*>(&tmp), sizeof(idxNode));
 						}
-						fdata.seekg(4096 + buffer_size * (tmp.idx[0] - 1), ios::beg);
+						fdata.seekg(sizeof(int) + sizeof(dataNode) * (tmp.idx[0] - 1), ios::beg);
 						fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 						delete tmp1;
 					}
 					else {
-						fdata.seekg(4096 + buffer_size * (t2.idx[0] - 1), ios::beg);
+						fdata.seekg(sizeof(int) + sizeof(dataNode) * (t2.idx[0] - 1), ios::beg);
 						fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 					}
 					pre.key[pre.len - 1] = d.record[0];
@@ -1129,12 +1085,12 @@ private:
 						fidx.seekg(4096 + 4096 * (tmp.idx[0] - 1), ios::beg);
 						fidx.read(reinterpret_cast<char*>(&tmp), sizeof(idxNode));
 					}
-					fdata.seekg(4096 + buffer_size * (tmp.idx[0] - 1), ios::beg);
+					fdata.seekg(sizeof(int) + sizeof(dataNode) * (tmp.idx[0] - 1), ios::beg);
 					fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 					delete tmp1;
 				}
 				else {
-					fdata.seekg(4096 + buffer_size * (next.idx[0] - 1), ios::beg);
+					fdata.seekg(sizeof(int) + sizeof(dataNode) * (next.idx[0] - 1), ios::beg);
 					fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 				}
 				t2.key[t2.len - 1] = d.record[0];
@@ -1180,7 +1136,7 @@ private:
 				break;
 		if (t.type == 1) {
 			fdata.open(dataname, fstream::in | fstream::out | fstream::binary);
-			fdata.seekg(4096 + buffer_size * (t.idx[i] - 1), ios::beg);
+			fdata.seekg(sizeof(int) + sizeof(dataNode) * (t.idx[i] - 1), ios::beg);
 			//dataNode d;
 			dataNode *d1 = new dataNode;
 			dataNode &d = *d1;
@@ -1188,11 +1144,8 @@ private:
 			for (int j = 0; j < d.len; ++j)
 				if (!(d.record[j] < x) && !(x < d.record[j])) {
 					d.value[j] = v;
-					char buffer2[buffer_size];
-					fdata.seekp(4096 + buffer_size * (t.idx[i] - 1), ios::beg);
-					memcpy(buffer2,reinterpret_cast<char*>(&d), sizeof(dataNode));
-					fdata.write(buffer2,buffer_size);
-					//fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
+					fdata.seekp(sizeof(int) + sizeof(dataNode) * (t.idx[i] - 1), ios::beg);
+					fdata.write(reinterpret_cast<char*>(&d), sizeof(dataNode));
 					fdata.close();
 					delete t1;
 					delete d1;
@@ -1221,7 +1174,7 @@ private:
 			//dataNode d;
 			dataNode *d1 = new dataNode;
 			dataNode &d = *d1;
-			fdata.seekg(4096 + buffer_size * (t.idx[i] - 1), ios::beg);
+			fdata.seekg(sizeof(int) + sizeof(dataNode) * (t.idx[i] - 1), ios::beg);
 			fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 			for (j = 0; j < d.len; ++j) {
 				if (d.record[j] == x) {
@@ -1259,7 +1212,7 @@ private:
 			//dataNode d;
 			dataNode *d1 = new dataNode;
 			dataNode &d = *d1;
-			fdata.seekg(4096 + buffer_size * (t.idx[i] - 1), ios::beg);
+			fdata.seekg(sizeof(int) + sizeof(dataNode) * (t.idx[i] - 1), ios::beg);
 			fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 			for (j = 0; j < d.len; ++j) {
 				if (!(d.record[j] < x) && !(x < d.record[j])) {
@@ -1297,7 +1250,7 @@ private:
 			//dataNode d;
 			dataNode *d1 = new dataNode;
 			dataNode &d = *d1;
-			fdata.seekg(4096 + buffer_size * (t.idx[i] - 1), ios::beg);
+			fdata.seekg(sizeof(int) + sizeof(dataNode) * (t.idx[i] - 1), ios::beg);
 			fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 			for (j = 0; j<d.len;j++)
 			{
@@ -1310,7 +1263,7 @@ private:
 				q=d.nex;
 				if (q!=0)
 				{
-					fdata.seekg(4096 + buffer_size * (q - 1), ios::beg);
+					fdata.seekg(sizeof(int) + sizeof(dataNode) * (q - 1), ios::beg);
 					fdata.read(reinterpret_cast<char*>(&d), sizeof(dataNode));
 					j=0;
 				}
@@ -1343,7 +1296,7 @@ private:
 				break;
 		if (t.type == 1) {
 			fdata.open(dataname, fstream::in | fstream::binary);
-			fdata.seekg(4096 + buffer_size * (t.idx[i] - 1), ios::beg);
+			fdata.seekg(sizeof(int) + sizeof(dataNode) * (t.idx[i] - 1), ios::beg);
 			//dataNode d;
 			dataNode *d1 = new dataNode;
 			dataNode &d = *d1;

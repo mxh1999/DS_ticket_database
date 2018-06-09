@@ -195,9 +195,9 @@ struct tk_query {
 };
 
 Userlist user("test1.txt");
-BplusTree<train_id_key, TRAIN,164,1,24576> train;
-BplusTree<tk_key, tk,38,18,4096> ticket;
-BplusTree<user_order_key, tk_order,33,9,4096> User;
+BplusTree<train_id_key, TRAIN,164,1> train;
+BplusTree<tk_key, tk,38,18> ticket;
+BplusTree<user_order_key, tk_order,33,9> User;
 
 int main() {
 //	printf("%d %d\n",sizeof(train_id_key),sizeof(TRAIN));
@@ -435,7 +435,7 @@ int main() {
 //            }
             tk_key K;
             tk_query T[8000];
-            BplusTree<tk_key, tk,38,18,4096>::iterator it;
+            BplusTree<tk_key, tk,38,18>::iterator it;
             char date[12];
             char catalog[11];
             int dt;
@@ -509,8 +509,8 @@ int main() {
             }
         }
         else if (strcmp(a, "query_transfer") == 0) {//查找A到C地，中转B站的车票;
-            BplusTree<tk_key, tk,38,18,4096>::iterator it1; //A到B；
-            BplusTree<tk_key, tk,38,18,4096>::iterator it2; //C到B；
+            BplusTree<tk_key, tk,38,18>::iterator it1; //A到B；
+            BplusTree<tk_key, tk,38,18>::iterator it2; //C到B；
             tk_key K1;
             tk_key K2;
             char date[12];
@@ -763,7 +763,7 @@ int main() {
             if(!user.isvalid(K.user_id))
                 cout << -1 << '\n';
             else{
-                BplusTree<user_order_key, tk_order,33,9,4096>::iterator it;
+                BplusTree<user_order_key, tk_order,33,9>::iterator it;
                 for (int b = 0; catalog[b] != '\0'; ++b) {
                     K.train_kind = catalog[b];
                     it = User.lowerbound(K);
